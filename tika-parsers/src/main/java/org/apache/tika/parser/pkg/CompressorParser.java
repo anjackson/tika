@@ -170,7 +170,7 @@ public class CompressorParser extends AbstractParser {
             CompressorParserOptions options =
                  context.get(CompressorParserOptions.class, new CompressorParserOptions() {
                      public boolean decompressConcatenated(Metadata metadata) {
-                         return false;
+                         return true;
                      }
                  });
             CompressorStreamFactory factory =
