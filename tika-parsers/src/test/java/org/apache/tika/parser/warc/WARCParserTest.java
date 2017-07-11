@@ -69,18 +69,7 @@ public class WARCParserTest extends TikaTest {
 		for(Metadata m : mlist) {
 			System.err.println("M "+m);
 		}
-		String content = "";
-		try(InputStream stream = WARCParserTest.class.getResourceAsStream(
-				"/test-documents/testWARC.warc")) {
-			try {
-				content = getText(stream, parser, metadata);
-			} catch (SAXException e) {
-
-			}
-			System.out.println("Type: "+ metadata.get(Metadata.CONTENT_TYPE));
-			//System.out.println("Content "+content);
-		}
-
+		
 		fail("Not yet implemented");
 	}
 
@@ -91,17 +80,6 @@ public class WARCParserTest extends TikaTest {
 			System.err.println("MM "+ m.get("X-TIKA:embedded_resource_path")+ " "+ m.get("Content-Type"));
 			//System.err.println("M "+m);
 		}
-		/*
-		Parser parser = new AutoDetectParser(); // Should auto-detect!
-		Metadata metadata = new Metadata();
-		String content;
-		try(InputStream stream = WARCParserTest.class.getResourceAsStream(
-				"/test-documents/testWARCGZ.warc.gz")) {
-			content = getText(stream, parser, metadata);
-		}
-		System.out.println("Type: "+ metadata.get(Metadata.CONTENT_TYPE));
-		//System.out.println("Content "+content);
-		 */
 
 		fail("Not yet implemented");
 	}
