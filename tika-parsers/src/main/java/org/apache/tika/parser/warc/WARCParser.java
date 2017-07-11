@@ -94,7 +94,6 @@ public class WARCParser implements Parser {
 
 		// Open the ARCReader:
 		String archiveName = metadata.get(Metadata.RESOURCE_NAME_KEY);
-		LOG.info("Opening archive reader for " + archiveName);
 		ArchiveReader ar;
 		String archiveType;
 		if ("application/x-internet-archive"
@@ -132,14 +131,13 @@ public class WARCParser implements Parser {
 					
 					// Only parse ARC records or WARC response records with
 					// non-zero-length entity bodies:
-					LOG.info("Looking at: " + header);
 					if (header.getContentLength() > 0) {
 						if (entry instanceof ARCRecord
 								|| WARCConstants.WARCRecordType.response.name().equals(
 										header.getHeaderValue(WARCConstants.HEADER_KEY_TYPE))) {
 
-							// Consume and apply HTTP Headers for WARCs:
-							if (entry instanceof WARCRecord) {
+							// Consume and apply HTTP Headers for WARCs, skipping e.g. DNS records:
+							if (entry instanceof WARCRecord && header.getUrl().startsWith("http")) {
 								parseHttpHeader(entry, entrydata);
 							}
 

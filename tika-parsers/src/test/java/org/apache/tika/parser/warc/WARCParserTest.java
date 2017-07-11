@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +44,7 @@ import org.xml.sax.helpers.DefaultHandler;
 public class WARCParserTest extends TikaTest {
 
 
-	public List<Metadata> recursiveParserWrapperExample(String testFile) throws IOException,
+	private List<Metadata> recursiveParserWrapper(String testFile) throws IOException,
 	SAXException, TikaException {
 		AutoDetectParser p = new AutoDetectParser();
 		
@@ -60,49 +61,70 @@ public class WARCParserTest extends TikaTest {
 		}
 		return wrapper.getMetadata();
 	}
+	
+	private void checkParseResults(List<Metadata> mlist, boolean isWARC) {
+		// Check overall state:
+		
+		// Switch to hash map for easier checking:
+		HashMap<String, Metadata> mmap = new HashMap<String, Metadata>();
+		for(Metadata md : mlist) {
+			String name = md.get(RecursiveParserWrapper.EMBEDDED_RESOURCE_PATH);
+			if( name != null) {
+				mmap.put(name, md);
+			}
+		}
+		
+		// Check a specific record:
+		// TODO This seems like a mess, as the same thing is getting different names based on extraction method.
+		Metadata m = mmap.get("/");
+		if( m == null ) {
+			m = mmap.get("/testWARCGZ.warc/");
+		}
+		if( m == null ) {
+			m = mmap.get("/testARCGZ.arc/");
+		}
+
+		// General tests:
+		assertEquals("text/html", m.get("HTTP-Content-Type"));
+		assertEquals("200", m.get("HTTP-Status-Code"));
+		
+		// Format-specific tests:
+		if( isWARC ) {
+			assertEquals("http://localhost/", m.get("WARC-Target-URI"));
+			assertEquals("response", m.get("WARC-Type"));
+			assertEquals("application/http; msgtype=response", m.get("WARC-Content-Type"));
+		} else {
+			assertEquals("http://127.0.0.1/", m.get("subject-uri"));
+		}
+		
+	}
 
 	@Test
 	public void testWARC() throws Exception {
-		AutoDetectParser parser = new AutoDetectParser(); // Should auto-detect!
-		Metadata metadata = new Metadata();
-		List<Metadata> mlist = this.recursiveParserWrapperExample("/test-documents/testWARC.warc");
-		for(Metadata m : mlist) {
-			System.err.println("M "+m);
-		}
-		
-		fail("Not yet implemented");
+		List<Metadata> mlist = this.recursiveParserWrapper("/test-documents/testWARC.warc");
+    assertEquals("Unexpected number of records", 7, mlist.size());
+		checkParseResults(mlist, true);
 	}
 
 	@Test
 	public void testWARCGZ() throws Exception {
-		List<Metadata> mlist = this.recursiveParserWrapperExample("/test-documents/testWARCGZ.warc.gz");
-		for(Metadata m : mlist) {
-			System.err.println("MM "+ m.get("X-TIKA:embedded_resource_path")+ " "+ m.get("Content-Type"));
-			//System.err.println("M "+m);
-		}
-
-		fail("Not yet implemented");
+		List<Metadata> mlist = this.recursiveParserWrapper("/test-documents/testWARCGZ.warc.gz");
+    assertEquals("Unexpected number of records", 8, mlist.size());
+		checkParseResults(mlist, true);
 	}
-
-	@Test
-	public void testARCGZ() throws Exception {
-		List<Metadata> mlist = this.recursiveParserWrapperExample("/test-documents/testARCGZ.arc.gz");
-		for(Metadata m : mlist) {
-			System.err.println("\nMM "+ m.get("X-TIKA:embedded_resource_path")+ " "+ m.get("Content-Type"));
-			System.err.println("M "+m);
-		}
-		fail("Not yet implemented");
-	}
-
 
 	@Test
 	public void testARC() throws Exception {
-		List<Metadata> mlist = this.recursiveParserWrapperExample("/test-documents/testARC.arc");
-		for(Metadata m : mlist) {
-			System.err.println("\nMM "+ m.get("X-TIKA:embedded_resource_path")+ " "+ m.get("Content-Type"));
-			System.err.println("M "+m);
-		}
-		fail("Not yet implemented");
+		List<Metadata> mlist = this.recursiveParserWrapper("/test-documents/testARC.arc");
+    assertEquals("Unexpected number of records", 6, mlist.size());
+		checkParseResults(mlist, false);
 	}
 	
+	@Test
+	public void testARCGZ() throws Exception {
+		List<Metadata> mlist = this.recursiveParserWrapper("/test-documents/testARCGZ.arc.gz");
+    assertEquals("Unexpected number of records", 7, mlist.size());
+		checkParseResults(mlist, false);
+	}
+
 }
